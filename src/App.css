@@ -53,6 +53,7 @@
 .dropdown {
   position: relative;
   display: inline-block;
+  cursor: pointer;
 }
 
 .dropdown-content {
@@ -78,4 +79,10 @@
 .dropdown:hover .dropbtn {
   background-color: white;
   color: black;
+}
+
+.active
+{
+  color: white;
+  background-color: tomato;
 }

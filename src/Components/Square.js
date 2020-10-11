@@ -8,15 +8,27 @@ class Square extends React.Component {
     {
       super(props);
       this.state = {
-        value: null
+        value: null,
+        class: this.props.class,
       };
       this.HandleOnClick = this.props.click;
     }
   
+    componentDidUpdate(preProps)
+    {
+      const strClassName = this.props.class;
+      if(strClassName !== preProps.class)
+      {
+        this.setState({
+          class: strClassName,
+        })
+      }
+    }
   
     render() {
+      const strClassName = this.state.class ? this.state.class + " square": "square";
       return (
-        <button className="square" onClick={() => this.HandleOnClick()}>
+        <button className={strClassName} onClick={this.HandleOnClick}>
           {this.props.value}
         </button>
       );

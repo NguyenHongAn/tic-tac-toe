@@ -5,75 +5,117 @@ import Square from './Square';
 class Board extends React.Component {
     constructor(props) {
       super(props);
-      const size = this.props.size;
       this.state = {
-        squares: Array(size*size).fill(null),
-        isXTurn: true,
+        squares: this.props.squares,
+        size: this.props.size,
+        isXTurn: (this.props.step % 2) === 0,
         position: -1,
-        maxSize: size,
+        maxSize: this.props.size,
         maxStep: 3,
       };
       this.CalculateWinner = this.CalculateWinner.bind(this);
+      this.SaveHistory = this.props.save;
     }
   
     componentDidUpdate(preProps)
     {
-      const size = this.props.size;
-      //console.log(`Change from ${preProps.restart} to ${this.props.restart}`);
-      if (size !== preProps.size || this.props.restart !== preProps.restart)
+      const {squares,restart,size} = this.props;
+      if (restart !== preProps.restart)
       {
         this.setState({
-          squares: Array(size*size).fill(null),
-          maxSize: this.props.size,
+          squares: squares,
+          maxSize: size,
+          isXTurn: (this.props.step % 2) === 0
         })
       }
     }
   
+    IsDrawn = (squares) =>{
+      return squares.every(value => value !==null);
+    }
+
     CalculateWinner(squares, position, maxSize, maxStep)
     {
         let size = maxSize;
+        let line =[];
         const i = Math.floor(position /size);
         const j = Math.floor(position % size);
-        let count = 0;
+        if (this.IsDrawn(squares))
+        {
+          const result = {
+                 msg: "===== Draw =====",
+                };
+          return result;
+        }
+
+        let matrix = [];
+        for (let i =0 ; i< squares.length; i+= maxSize)
+        {
+          matrix.push(squares.slice(i,maxSize+i));
+        }
+        console.log(matrix);
         //ngang
         for (let k = 0; k< size;k++)
         {
-            if (squares[position] && squares[size*i+k]===squares[position])
+            if (squares[position] && matrix[i][k]===squares[position])
             {
-                count++;
+              line.push(size*i+k);
+
+            }
+            else if(line.length !==0)
+            {
+              break;
             }
         }
-
-        if (count === maxStep)
+        //
+        console.log({Ngang: line});
+        if (line.length === maxStep)
         {
-            return squares[position];
+            return {
+              msg: squares[position],
+              line: line,
+            }
         }
-        count = 0;
+        line = [];
         //Doc
         for (let k = 0; k< size;k++)
         {
-            if (squares[position] && squares[size*k+j]===squares[position])
+            if (squares[position] && matrix[k][j]===squares[position])
             {
-                count++;
+              line.push(size*k+j);
+            }
+            else if(line.length !==0)
+            {
+              break;
             }
         }
-        if (count === maxStep)
+
+        //
+        console.log({Doc: line});
+        if (line.length === maxStep)
         {
-            return squares[position];
+            return {
+              msg: squares[position],
+              line: line,
+            };
         }
         //cheo tu trai sang phia
-        count = 0;
+        line = [];
        
-        let factor = Math.abs(i-j);
-        j>i? size=1: size = maxSize;
+        let row = 0, col = 0;
+        i>j? row = i-j: col = j-i;
         for(let k=0;k<maxSize;k++)
         {
             
-            if(factor*size+ maxSize*k+k < squares.length)
+            if(row+k < maxSize && col+k<maxSize)
             {
-                if (squares[position] && squares[factor*size+ maxSize*k+k]===squares[position])
+                if (squares[position] && matrix[row+k][col+k]===squares[position])
                 {
-                    count++;
+                    line.push((row+k)*size + col+k);
+                }
+                else if(line.length !==0)
+                {
+                  break;
                 }
             }
             else
@@ -82,25 +124,43 @@ class Board extends React.Component {
             }
         }
         
-
-        if (count === maxStep)
+        //
+        console.log({Left: line});
+        if (line.length === maxStep)
         {
-            return squares[position];
+            return {
+              msg: squares[position],
+              line: line,
+            };
         }
 
         //cheo tu phai sang trai
 
-         count = 0;
-        factor = i+j;
-        i>j? size=1: size = maxSize;
+        line = [];
+        col =0;
+        row = 0;  
+        if (i + j > maxSize -1)
+        {
+          col = maxSize - 1;
+          row = i+j - (maxSize -1);
+        }
+        else
+        {
+          col = i+j;
+        }
+
         for(let k=0;k<maxSize;k++)
         {
             
-            if((factor)+(size-1)*i + maxSize*k-k < squares.length)
+            if(row + k <maxSize && col - k >= 0)
             {
-                if (squares[position] && squares[(factor)+(size-1)*i + maxSize*k-k]===squares[position])
+                if (squares[position] && matrix[row + k][col - k]===squares[position])
                 {
-                    count++;
+                    line.push((row+k)*maxSize +col -k);
+                }
+                else if(line.length !==0)
+                {
+                  break;
                 }
             }
             else
@@ -108,11 +168,15 @@ class Board extends React.Component {
                 break;
             }
         }
-        
+        //
+        console.log({Right: line});
 
-        if (count === maxStep)
+        if (line.length === maxStep)
         {
-            return squares[position];
+            return {
+              msg: squares[position],
+              line: line,
+            };
         }
 
         return null;
@@ -120,9 +184,9 @@ class Board extends React.Component {
   
     HandleClick(i)
     {
-      let {squares, isXTurn, position, maxSize, maxStep} = this.state;
-      squares = squares.slice();
-      if (this.CalculateWinner(squares,position,maxSize,maxStep)|| squares[i])
+      const {squares, isXTurn, position, maxSize, maxStep} = this.state;
+      let newsquares = squares.slice();
+      if (this.CalculateWinner(newsquares,position,maxSize,maxStep)|| newsquares[i])
       {
           return;
       }
@@ -130,16 +194,20 @@ class Board extends React.Component {
 
       if (isXTurn)
       {
-        squares[i] = 'X';
+        newsquares[i] = 'X';
       }
       else{
-        squares[i] = "O";
+        newsquares[i] = "O";
       }
       
       this.setState({
-        squares: squares,
+        squares: newsquares,
         isXTurn: !this.state.isXTurn,
         position: i,
+      });
+      this.SaveHistory({
+        squares: newsquares,
+        pos: i
       });
     }
   
@@ -159,7 +227,15 @@ class Board extends React.Component {
       const winner = this.CalculateWinner(squares, position, maxSize, maxStep);
       let status;
       if (winner) {
-        status = 'Winner: ' + winner;
+        if(winner.msg.length > 2)
+        {
+          status = winner.msg;
+        }
+        else
+        {
+          status = 'Winner: ' + winner.msg;
+          console.log(winner.line);
+        }
       }
       else{
         status = 'Next player: ' + (isXTurn ? 'X' : 'O');
@@ -170,7 +246,15 @@ class Board extends React.Component {
           <div className="status">{status}</div>
           <div style={this.setGridStyle(this.state.maxSize)}>
           {
-            squares.map((turn,i) => <Square key={i} value={turn} click={() => this.HandleClick(i)} ></Square>)
+            squares.map((turn,i) => {
+            return <Square key={i} value={turn} click={() => this.HandleClick(i)}
+             class={
+               (winner && winner.line && winner.line.includes(i))?
+               "active":null
+              }
+             ></Square>
+            }
+             )
           }
           </div>
         </div>
