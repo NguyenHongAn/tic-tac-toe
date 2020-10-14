@@ -40,20 +40,14 @@ class Board extends React.Component {
         let line =[];
         const i = Math.floor(position /size);
         const j = Math.floor(position % size);
-        if (this.IsDrawn(squares))
-        {
-          const result = {
-                 msg: "===== Draw =====",
-                };
-          return result;
-        }
+        
 
         let matrix = [];
         for (let i =0 ; i< squares.length; i+= maxSize)
         {
           matrix.push(squares.slice(i,maxSize+i));
         }
-        console.log(matrix);
+        console.log(squares);
         //ngang
         for (let k = 0; k< size;k++)
         {
@@ -67,9 +61,8 @@ class Board extends React.Component {
               break;
             }
         }
-        //
-        console.log({Ngang: line});
-        if (line.length === maxStep)
+
+        if (line.length >= maxStep)
         {
             return {
               msg: squares[position],
@@ -90,9 +83,7 @@ class Board extends React.Component {
             }
         }
 
-        //
-        console.log({Doc: line});
-        if (line.length === maxStep)
+        if (line.length >= maxStep)
         {
             return {
               msg: squares[position],
@@ -124,9 +115,7 @@ class Board extends React.Component {
             }
         }
         
-        //
-        console.log({Left: line});
-        if (line.length === maxStep)
+        if (line.length >= maxStep)
         {
             return {
               msg: squares[position],
@@ -168,15 +157,21 @@ class Board extends React.Component {
                 break;
             }
         }
-        //
-        console.log({Right: line});
 
-        if (line.length === maxStep)
+        if (line.length >= maxStep)
         {
             return {
               msg: squares[position],
               line: line,
             };
+        }
+
+        if (this.IsDrawn(squares))
+        {
+          const result = {
+                 msg: "===== Draw =====",
+                };
+          return result;
         }
 
         return null;
